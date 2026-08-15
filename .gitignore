@@ -1,0 +1,10 @@
+node_modules/
+dist-ui/
+dist-server/
+dist-electron/
+release/
+data/state.json
+.env
+npm-debug.log*
+outputs/
+work/

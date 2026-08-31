@@ -39,8 +39,25 @@ export class McpManager {
     const added: string[] = [];
     for (const [rawId, value] of Object.entries(entries)) {
       if (!value || typeof value !== "object" || (!value.command && !value.url)) throw new Error(`Сервер ${rawId}: нужен command или url`);
+
+      const args = Array.isArray(value.args) ? value.args.map(String) : [];
+      const env = value.env && typeof value.env === "object" ? Object.fromEntries(Object.entries(value.env).map(([k, v]) => [String(k), String(v)])) : undefined;
+      const cwd = typeof value.cwd === "string" ? value.cwd : undefined;
+      const headers = value.headers && typeof value.headers === "object" ? Object.fromEntries(Object.entries(value.headers).map(([k, v]) => [String(k), String(v)])) : undefined;
+
       const id = rawId.replace(/[^a-zA-Z0-9_-]/g, "-");
-      const config: ServerConfig = { id, label: value.label ?? rawId, enabled: value.enabled ?? true, command: value.command, args: value.args ?? [], env: value.env, cwd: value.cwd, url: value.url, headers: value.headers, disabledTools: value.disabledTools ?? [] };
+      const config: ServerConfig = {
+        id,
+        label: typeof value.label === "string" ? value.label : rawId,
+        enabled: typeof value.enabled === "boolean" ? value.enabled : true,
+        command: typeof value.command === "string" ? value.command : undefined,
+        args,
+        env,
+        cwd,
+        url: typeof value.url === "string" ? value.url : undefined,
+        headers,
+        disabledTools: Array.isArray(value.disabledTools) ? value.disabledTools.map(String) : []
+      };
       const index = this.state.servers.findIndex(s => s.id === id);
       if (index >= 0) this.state.servers[index] = { ...config, disabledTools: this.state.servers[index].disabledTools };
       else this.state.servers.push(config);

@@ -7,7 +7,15 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { CallToolRequestSchema, isInitializeRequest, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { McpManager } from "./manager.js";
 
-const app = express(); app.use(express.json({ limit: "2mb" }));
+const app = express();
+app.use((req, res, next) => {
+  const host = req.get("host");
+  if (!host || (host !== "127.0.0.1:7331" && host !== "localhost:7331")) {
+    return res.status(403).send("Invalid Host header");
+  }
+  next();
+});
+app.use(express.json({ limit: "2mb" }));
 const manager = new McpManager(); await manager.init();
 const sessions = new Map<string, { transport: StreamableHTTPServerTransport; server: Server }>();
 

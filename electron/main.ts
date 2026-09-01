@@ -18,9 +18,28 @@ async function createWindow() {
     webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false }
   });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith("https://")) shell.openExternal(url);
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.protocol === "https:" || parsedUrl.protocol === "http:") {
+        shell.openExternal(url);
+      }
+    } catch {
+      // Ignore invalid URLs
+    }
     return { action: "deny" };
   });
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.origin !== "http://127.0.0.1:7331" && parsedUrl.origin !== "http://localhost:7331") {
+        event.preventDefault();
+      }
+    } catch {
+      event.preventDefault();
+    }
+  });
+
   await mainWindow.loadURL("http://127.0.0.1:7331");
   mainWindow.on("closed", () => { mainWindow = null; });
 }
